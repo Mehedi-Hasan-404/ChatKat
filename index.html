@@ -137,7 +137,7 @@
             word-wrap: break-word; min-width: 50px; position: relative; box-shadow: var(--shadow-light);
         }
         .message-content a { color: inherit; text-decoration: underline; }
-        .message-content img { max-width: 100%; border-radius: 12px; margin-top: 5px; } /* Style for rendered images */
+        .message-content img { max-width: 100%; border-radius: 12px; margin-top: 5px; cursor: pointer; }
         .sender-name { font-size: 0.8rem; font-weight: 600; color: var(--primary-color); margin-bottom: 4px; }
         .message-container.sent .message-content { background: var(--sent-bg); color: var(--text-light); border-bottom-right-radius: var(--radius-small); }
         .message-container.received .message-content { background: var(--received-bg); color: var(--text-dark); border-bottom-left-radius: var(--radius-small); }
@@ -231,9 +231,9 @@
         </div>
     </div>
 
-    <div id="create-account-screen" class="popup-overlay" style="display: flex;">
+    <div id="profile-screen" class="popup-overlay" style="display: flex;">
         <div class="popup-content">
-            <h2>Create Your Profile</h2>
+            <h2 id="profile-title">Create Your Profile</h2>
             <div class="form-group">
                 <label for="name-input">Display Name</label>
                 <input type="text" id="name-input" placeholder="e.g., Alex Doe" required>
@@ -248,10 +248,12 @@
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script> <script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
+
+    <script>
         document.addEventListener('DOMContentLoaded', () => {
             const App = {
-                // MODIFIED: Replaced with your new Firebase config
+                // Using the Firebase config you provided
                 firebaseConfig: {
                     apiKey: "AIzaSyDpHzYZOY820dxclxaaM1uroNarSjODcwA",
                     authDomain: "chatkat-1f3c5.firebaseapp.com",
@@ -275,10 +277,11 @@
                     attachBtn: document.getElementById('attach-btn'),
                     fileInput: document.getElementById('file-input'),
                     userProfileBtn: document.getElementById('user-profile-btn'),
-                    createAccountScreen: document.getElementById('create-account-screen'),
+                    profileScreen: document.getElementById('profile-screen'), // MODIFIED: Renamed for clarity
                     saveProfileBtn: document.getElementById('save-profile-btn'),
                     nameInput: document.getElementById('name-input'),
                     profilePicUrlInput: document.getElementById('profile-pic-url'),
+                    profileTitle: document.getElementById('profile-title'), // NEW: For changing popup title
                     onlineStatus: document.getElementById('online-status'),
                     typingIndicator: document.getElementById('typing-indicator'),
                     themeToggle: document.getElementById('theme-toggle'),
@@ -301,33 +304,28 @@
 
                 initFirebase() {
                     try {
-                        // IMPORTANT: For this app to work, you MUST set up your Firebase Security Rules
-                        // for both Realtime Database and Storage to allow public read/write.
-                        // Example rule for testing (NOT FOR PRODUCTION): 
-                        // { "rules": { ".read": true, ".write": true } }
-
+                        // REMINDER: Your Firebase Realtime Database and Storage rules MUST be public for this to work.
                         firebase.initializeApp(this.firebaseConfig);
                         this.db = firebase.database();
-                        this.storage = firebase.storage(); // NEW: Initialize storage
+                        this.storage = firebase.storage();
                         
+                        // This will check if the DB structure exists and create it if not.
                         this.initializeDatabaseStructure();
                         
                     } catch (error) {
                         console.error('Firebase initialization failed:', error);
+                        alert('Could not connect to the chat server. Please check the console for errors.');
                     }
                 },
 
                 initializeDatabaseStructure() {
-                    const baseRef = this.db.ref('chatkat_main_chat'); // MODIFIED: Database path
+                    const baseRef = this.db.ref('chatkat_main_chat'); 
                     
                     baseRef.once('value').then((snapshot) => {
                         if (!snapshot.exists()) {
                             console.log('Creating new database structure...');
-                            
                             const initialData = {
-                                created_at: firebase.database.ServerValue.TIMESTAMP,
-                                name: "ChatKat by Mehedi", // MODIFIED: Chat name
-                                description: "Public chat group by Mehedi",
+                                name: "ChatKat by Mehedi",
                                 messages: {
                                     welcome: {
                                         sender: { name: "System", pic: "" },
@@ -339,21 +337,18 @@
                                 presence: {},
                                 typing: {},
                             };
-                            
-                            baseRef.set(initialData).then(() => {
-                                console.log('Database structure created successfully!');
-                                this.setupFirebaseReferences();
-                            }).catch((error) => console.error('Error creating database structure:', error));
-                            
+                            baseRef.set(initialData).then(() => this.setupFirebaseReferences());
                         } else {
-                            console.log('Database structure already exists');
                             this.setupFirebaseReferences();
                         }
-                    }).catch((error) => console.error('Error checking database structure:', error));
+                    }).catch(error => {
+                        console.error('Database read failed. CHECK YOUR FIREBASE SECURITY RULES.', error);
+                        this.elements.onlineStatus.textContent = 'Connection Failed';
+                    });
                 },
 
                 setupFirebaseReferences() {
-                    this.baseRef = this.db.ref('chatkat_main_chat'); // MODIFIED: Database path
+                    this.baseRef = this.db.ref('chatkat_main_chat');
                     this.messagesQuery = this.baseRef.child('messages').limitToLast(100);
                     this.presenceRef = this.baseRef.child('presence');
                     this.typingRef = this.baseRef.child('typing');
@@ -369,10 +364,9 @@
                     this.elements.messageInput.addEventListener('input', () => this.handleTyping());
                     this.elements.attachBtn.addEventListener('click', () => this.elements.fileInput.click());
                     this.elements.saveProfileBtn.addEventListener('click', () => this.saveUserProfile());
-                    this.elements.userProfileBtn.addEventListener('click', () => { this.elements.createAccountScreen.style.display = 'flex'; });
+                    // MODIFIED: This now opens the profile for editing.
+                    this.elements.userProfileBtn.addEventListener('click', () => this.showProfilePopup(true));
                     this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
-                    
-                    // NEW: Event listener for file selection
                     this.elements.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
                 },
 
@@ -384,33 +378,49 @@
                     if (savedName) {
                         this.user.name = savedName;
                         this.user.pic = localStorage.getItem('profilePic') || '';
-                        this.elements.createAccountScreen.style.display = 'none';
+                        this.elements.profileScreen.style.display = 'none';
                         this.updateProfileUI();
                         
                         if (this.messagesQuery) {
                             this.startApp();
                         }
+                    } else {
+                        // NEW: If no profile, show the create screen immediately.
+                        this.showProfilePopup(false);
                     }
                 },
 
+                // NEW: Function to handle showing the profile popup for creating or editing.
+                showProfilePopup(isEditing) {
+                    if (isEditing) {
+                        this.elements.profileTitle.textContent = 'Edit Your Profile';
+                        this.elements.saveProfileBtn.textContent = 'Save Changes';
+                        this.elements.nameInput.value = this.user.name;
+                        this.elements.profilePicUrlInput.value = this.user.pic;
+                    } else {
+                        this.elements.profileTitle.textContent = 'Create Your Profile';
+                        this.elements.saveProfileBtn.textContent = 'Save and Join Chat';
+                    }
+                    this.elements.profileScreen.style.display = 'flex';
+                },
+
                 saveUserProfile() {
-                    const name = this.elements.nameInput?.value.trim() || '';
+                    const name = this.elements.nameInput?.value.trim();
                     if (!name) {
-                        alert('Please enter your name');
+                        alert('Please enter your name.');
                         return;
                     }
                     this.user.name = name;
                     this.user.pic = this.elements.profilePicUrlInput?.value.trim() || '';
                     localStorage.setItem('userName', this.user.name);
                     localStorage.setItem('profilePic', this.user.pic);
-                    this.elements.createAccountScreen.style.display = 'none';
+
+                    this.elements.profileScreen.style.display = 'none';
                     this.updateProfileUI();
                     
                     if (this.messagesQuery) {
-                        this.startApp();
-                    } else {
-                        // If firebase isn't ready, it will be started once references are set up
-                        console.log("Profile saved. Waiting for Firebase connection to start app.");
+                        // If app is already started, update presence. Otherwise, start it.
+                        this.isAppStarted ? this.updateMyPresence() : this.startApp();
                     }
                 },
                 
@@ -425,19 +435,18 @@
                 },
 
                 startApp() {
-                    if (!this.db || !this.messagesQuery) {
-                        console.error('Firebase not properly initialized');
+                    if (!this.db || !this.messagesQuery || this.isAppStarted) {
                         return;
                     }
+                    this.isAppStarted = true; // Prevent starting multiple times
                     this.listenForMessages();
                     this.setupPresence();
                     this.listenForTyping();
                 },
                 
-                // MODIFIED: Accepts an optional text argument for sending image URLs
                 sendMessage(textToSend = null) {
                     const text = textToSend || this.elements.messageInput.value.trim();
-                    if (!text || !this.messagesQuery) return;
+                    if (!text) return;
                     
                     const messageData = {
                         sender: { name: this.user.name, pic: this.user.pic },
@@ -446,75 +455,65 @@
                         timestamp: firebase.database.ServerValue.TIMESTAMP
                     };
                     
-                    this.messagesQuery.ref.push(messageData)
-                        .catch((error) => console.error('Error sending message:', error));
+                    this.messagesQuery.ref.push(messageData).catch(err => console.error("Message send failed:", err));
                     
-                    if (!textToSend) { // Clear input only if it was a user-typed message
+                    if (!textToSend) {
                         this.elements.messageInput.value = '';
                     }
-                    
                     this.toggleSendButton();
                     this.setTypingStatus(false);
                 },
 
-                // NEW: Handle file upload logic
                 handleFileUpload(event) {
                     const file = event.target.files[0];
-                    if (!file || !file.type.startsWith('image/')) {
-                        alert('Please select an image file.');
-                        return;
-                    }
+                    if (!file || !file.type.startsWith('image/')) return;
                     
                     this.elements.typingIndicator.textContent = 'Uploading image...';
                     const filePath = `chat_images/${Date.now()}_${file.name}`;
-                    const storageRef = this.storage.ref(filePath);
-                    
-                    storageRef.put(file).then(snapshot => {
-                        return snapshot.ref.getDownloadURL();
-                    }).then(url => {
-                        this.sendMessage(url); // Send the image URL as a message
-                        this.elements.typingIndicator.textContent = '';
-                    }).catch(error => {
-                        console.error('Error uploading file:', error);
-                        this.elements.typingIndicator.textContent = 'Upload failed.';
-                        alert('Sorry, the image could not be uploaded.');
-                    });
+                    const uploadTask = this.storage.ref(filePath).put(file);
 
-                    event.target.value = ''; // Reset file input
+                    uploadTask.on('state_changed', null, 
+                        (error) => {
+                            console.error('Upload failed:', error);
+                            alert('Sorry, the image could not be uploaded.');
+                            this.elements.typingIndicator.textContent = '';
+                        }, 
+                        () => {
+                            uploadTask.snapshot.ref.getDownloadURL().then(url => {
+                                this.sendMessage(url);
+                                this.elements.typingIndicator.textContent = '';
+                            });
+                        }
+                    );
+                    event.target.value = '';
                 },
 
                 listenForMessages() {
-                    const onMessage = snapshot => {
+                    this.messagesQuery.on('child_added', snapshot => {
                         const msg = snapshot.val();
                         if (msg && msg.sender) this.renderMessage(msg, snapshot.key);
-                    };
-                    this.messagesQuery.on('child_added', onMessage);
-                    this.messagesQuery.on('child_changed', onMessage);
+                    });
                 },
                 
-                // MODIFIED: Now renders images if a message is an image URL
                 renderMessage(msg, key) {
                     const isSent = msg.sessionId === this.user.sessionId;
                     const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
                     
-                    const senderPicHtml = !isSent ? `<div class="sender-profile-pic" style="background-image: url('${msg.sender.pic || ''}')">${!msg.sender.pic ? (msg.sender.name?.charAt(0) || 'U').toUpperCase() : ''}</div>` : '';
-                    const senderNameHtml = !isSent ? `<div class="sender-name">${msg.sender.name || 'Unknown'}</div>` : '';
-                    
+                    const senderPicHtml = !isSent ? `<div class="sender-profile-pic" style="background-image: url('${msg.sender.pic || ''}')">${!msg.sender.pic ? (msg.sender.name?.charAt(0) || '?').toUpperCase() : ''}</div>` : '';
+                    const senderNameHtml = !isSent ? `<div class="sender-name">${msg.sender.name || 'Anonymous'}</div>` : '';
                     const statusIcon = isSent ? (this.onlineUsers.size > 1 ? this.icons.delivered : this.icons.sent) : '';
 
-                    // NEW: Check if the message text is an image URL
-                    const imageRegex = /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))$/i;
-                    let messageContentHtml;
+                    const imageRegex = /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
+                    let messageContentHtml = this.escapeHTML(msg.text || '');
                     if (imageRegex.test(msg.text)) {
-                        messageContentHtml = `<a href="${msg.text}" target="_blank" rel="noopener noreferrer"><img src="${msg.text}" alt="User content"></a>`;
+                        messageContentHtml = `<img src="${msg.text}" alt="User content" onclick="window.open('${msg.text}', '_blank')">`;
                     } else {
-                        // Autolink regular URLs
                         const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-                        messageContentHtml = (msg.text || '').replace(urlPattern, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+                        messageContentHtml = messageContentHtml.replace(urlPattern, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
                     }
 
                     const wrapper = document.createElement('div');
-                    wrapper.id = key;
+                    wrapper.id = `msg-${key}`;
                     wrapper.className = `message-wrapper ${isSent ? 'sent' : 'received'}`;
                     wrapper.innerHTML = `
                         <div class="message-container ${isSent ? 'sent' : 'received'}">
@@ -526,33 +525,42 @@
                             </div>
                         </div>`;
                     
-                    const existing = document.getElementById(key);
+                    const existing = document.getElementById(`msg-${key}`);
                     if (existing) {
                         existing.replaceWith(wrapper);
                     } else {
                         this.elements.chatMessages.appendChild(wrapper);
                     }
-                    
                     this.scrollToBottom();
+                },
+                
+                escapeHTML(str) {
+                    return str.replace(/[&<>"']/g, function(m) {
+                        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+                    });
                 },
 
                 setupPresence() {
-                    const myPresenceRef = this.presenceRef.child(this.user.sessionId);
                     const connectedRef = this.db.ref('.info/connected');
                     connectedRef.on('value', snap => {
                         if (snap.val() === true) {
-                            myPresenceRef.set({ name: this.user.name, last_seen: firebase.database.ServerValue.TIMESTAMP });
-                            myPresenceRef.onDisconnect().remove();
+                            this.updateMyPresence();
+                            this.presenceRef.child(this.user.sessionId).onDisconnect().remove();
                         }
                     });
 
                     this.presenceRef.on('value', snap => {
                         this.onlineUsers.clear();
-                        if (snap.exists()) {
-                            snap.forEach(child => { this.onlineUsers.set(child.key, child.val().name); });
-                        }
+                        snap.forEach(child => this.onlineUsers.set(child.key, child.val().name));
                         this.updateOnlineStatus();
                     });
+                },
+                
+                // NEW: Centralized function to set/update user's presence data.
+                updateMyPresence() {
+                    if(this.presenceRef && this.user.sessionId && this.user.name) {
+                       this.presenceRef.child(this.user.sessionId).set({ name: this.user.name, last_seen: firebase.database.ServerValue.TIMESTAMP });
+                    }
                 },
 
                 updateOnlineStatus() {
@@ -568,7 +576,6 @@
                 },
 
                 setTypingStatus(isTyping) {
-                    this.isTyping = isTyping;
                     const myTypingRef = this.typingRef.child(this.user.sessionId);
                     if (isTyping) {
                         myTypingRef.set({ name: this.user.name });
@@ -576,16 +583,15 @@
                     } else {
                         myTypingRef.remove();
                     }
+                    this.isTyping = isTyping;
                 },
 
                 listenForTyping() {
                     this.typingRef.on('value', snap => {
                         const typingUsers = [];
-                        if (snap.exists()) {
-                            snap.forEach(child => {
-                                if (child.key !== this.user.sessionId) typingUsers.push(child.val().name);
-                            });
-                        }
+                        snap.forEach(child => {
+                            if (child.key !== this.user.sessionId) typingUsers.push(child.val().name);
+                        });
                         this.updateTypingIndicator(typingUsers);
                     });
                 },
@@ -595,10 +601,8 @@
                         this.elements.typingIndicator.textContent = '';
                     } else if (users.length === 1) {
                         this.elements.typingIndicator.textContent = `${users[0]} is typing...`;
-                    } else if (users.length === 2) {
-                        this.elements.typingIndicator.textContent = `${users[0]} and ${users[1]} are typing...`;
                     } else {
-                        this.elements.typingIndicator.textContent = 'Several people are typing...';
+                        this.elements.typingIndicator.textContent = `${users.length} people are typing...`;
                     }
                 },
 
@@ -607,9 +611,7 @@
                 },
 
                 scrollToBottom() {
-                    setTimeout(() => {
-                        this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight;
-                    }, 100);
+                    setTimeout(() => this.elements.chatMessages.scrollTop = this.elements.chatMessages.scrollHeight, 100);
                 },
 
                 initTheme() {
@@ -620,13 +622,8 @@
                 setTheme(theme) {
                     document.documentElement.setAttribute('data-theme', theme);
                     localStorage.setItem('theme', theme);
-                    if (theme === 'dark') {
-                        this.elements.themeIconLight.style.display = 'none';
-                        this.elements.themeIconDark.style.display = 'block';
-                    } else {
-                        this.elements.themeIconLight.style.display = 'block';
-                        this.elements.themeIconDark.style.display = 'none';
-                    }
+                    this.elements.themeIconLight.style.display = theme === 'dark' ? 'none' : 'block';
+                    this.elements.themeIconDark.style.display = theme === 'dark' ? 'block' : 'none';
                 },
 
                 toggleTheme() {
