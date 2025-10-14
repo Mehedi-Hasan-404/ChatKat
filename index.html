@@ -178,7 +178,33 @@
         .popup-content {
             background: var(--bg-main); padding: 28px; border-radius: 20px;
             box-shadow: var(--shadow-heavy); width: 100%; max-width: 400px;
+            position: relative; /* Needed for positioning the close button */
         }
+        /* NEW: Styles for the close button */
+        #close-profile-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 32px;
+            height: 32px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color var(--transition-fast);
+        }
+        #close-profile-btn:hover {
+            background-color: var(--bg-light);
+        }
+        #close-profile-btn svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--text-secondary);
+        }
+
         .popup-content h2 { font-size: 1.5rem; font-weight: 600; margin-bottom: 24px; text-align: center; color: var(--text-dark); }
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-dark); }
@@ -233,6 +259,11 @@
 
     <div id="profile-screen" class="popup-overlay" style="display: flex;">
         <div class="popup-content">
+            <button id="close-profile-btn" aria-label="Close">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
             <h2 id="profile-title">Create Your Profile</h2>
             <div class="form-group">
                 <label for="name-input">Display Name</label>
@@ -253,7 +284,7 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const App = {
-                // Using the Firebase config you provided
+                // Using your provided Firebase config
                 firebaseConfig: {
                     apiKey: "AIzaSyDpHzYZOY820dxclxaaM1uroNarSjODcwA",
                     authDomain: "chatkat-1f3c5.firebaseapp.com",
@@ -277,11 +308,12 @@
                     attachBtn: document.getElementById('attach-btn'),
                     fileInput: document.getElementById('file-input'),
                     userProfileBtn: document.getElementById('user-profile-btn'),
-                    profileScreen: document.getElementById('profile-screen'), // MODIFIED: Renamed for clarity
+                    profileScreen: document.getElementById('profile-screen'),
                     saveProfileBtn: document.getElementById('save-profile-btn'),
+                    closeProfileBtn: document.getElementById('close-profile-btn'), // NEW
                     nameInput: document.getElementById('name-input'),
                     profilePicUrlInput: document.getElementById('profile-pic-url'),
-                    profileTitle: document.getElementById('profile-title'), // NEW: For changing popup title
+                    profileTitle: document.getElementById('profile-title'),
                     onlineStatus: document.getElementById('online-status'),
                     typingIndicator: document.getElementById('typing-indicator'),
                     themeToggle: document.getElementById('theme-toggle'),
@@ -304,14 +336,11 @@
 
                 initFirebase() {
                     try {
-                        // REMINDER: Your Firebase Realtime Database and Storage rules MUST be public for this to work.
+                        // REMINDER: Your Firebase Realtime Database and Storage rules MUST be set to public for this demo to work.
                         firebase.initializeApp(this.firebaseConfig);
                         this.db = firebase.database();
                         this.storage = firebase.storage();
-                        
-                        // This will check if the DB structure exists and create it if not.
                         this.initializeDatabaseStructure();
-                        
                     } catch (error) {
                         console.error('Firebase initialization failed:', error);
                         alert('Could not connect to the chat server. Please check the console for errors.');
@@ -320,7 +349,6 @@
 
                 initializeDatabaseStructure() {
                     const baseRef = this.db.ref('chatkat_main_chat'); 
-                    
                     baseRef.once('value').then((snapshot) => {
                         if (!snapshot.exists()) {
                             console.log('Creating new database structure...');
@@ -328,14 +356,11 @@
                                 name: "ChatKat by Mehedi",
                                 messages: {
                                     welcome: {
-                                        sender: { name: "System", pic: "" },
-                                        sessionId: "system",
-                                        text: "Welcome to ChatKat! Start the conversation.",
+                                        sender: { name: "System", pic: "" }, sessionId: "system", text: "Welcome to ChatKat! Start the conversation.",
                                         timestamp: firebase.database.ServerValue.TIMESTAMP
                                     }
                                 },
-                                presence: {},
-                                typing: {},
+                                presence: {}, typing: {},
                             };
                             baseRef.set(initialData).then(() => this.setupFirebaseReferences());
                         } else {
@@ -352,10 +377,7 @@
                     this.messagesQuery = this.baseRef.child('messages').limitToLast(100);
                     this.presenceRef = this.baseRef.child('presence');
                     this.typingRef = this.baseRef.child('typing');
-                    
-                    if (this.user.name) {
-                        this.startApp();
-                    }
+                    if (this.user.name) { this.startApp(); }
                 },
                 
                 initEventListeners() {
@@ -364,10 +386,18 @@
                     this.elements.messageInput.addEventListener('input', () => this.handleTyping());
                     this.elements.attachBtn.addEventListener('click', () => this.elements.fileInput.click());
                     this.elements.saveProfileBtn.addEventListener('click', () => this.saveUserProfile());
-                    // MODIFIED: This now opens the profile for editing.
                     this.elements.userProfileBtn.addEventListener('click', () => this.showProfilePopup(true));
                     this.elements.themeToggle.addEventListener('click', () => this.toggleTheme());
                     this.elements.fileInput.addEventListener('change', (e) => this.handleFileUpload(e));
+                    
+                    // NEW: Event listener for the close button
+                    this.elements.closeProfileBtn.addEventListener('click', () => this.hideProfilePopup());
+                    // NEW: Event listener to close popup when clicking the overlay
+                    this.elements.profileScreen.addEventListener('click', (e) => {
+                        if (e.target === this.elements.profileScreen) {
+                            this.hideProfilePopup();
+                        }
+                    });
                 },
 
                 loadUserProfile() {
@@ -380,17 +410,12 @@
                         this.user.pic = localStorage.getItem('profilePic') || '';
                         this.elements.profileScreen.style.display = 'none';
                         this.updateProfileUI();
-                        
-                        if (this.messagesQuery) {
-                            this.startApp();
-                        }
+                        if (this.messagesQuery) { this.startApp(); }
                     } else {
-                        // NEW: If no profile, show the create screen immediately.
                         this.showProfilePopup(false);
                     }
                 },
 
-                // NEW: Function to handle showing the profile popup for creating or editing.
                 showProfilePopup(isEditing) {
                     if (isEditing) {
                         this.elements.profileTitle.textContent = 'Edit Your Profile';
@@ -404,22 +429,23 @@
                     this.elements.profileScreen.style.display = 'flex';
                 },
 
+                // NEW: Function to hide the profile popup
+                hideProfilePopup() {
+                    this.elements.profileScreen.style.display = 'none';
+                },
+
                 saveUserProfile() {
                     const name = this.elements.nameInput?.value.trim();
-                    if (!name) {
-                        alert('Please enter your name.');
-                        return;
-                    }
+                    if (!name) { alert('Please enter your name.'); return; }
                     this.user.name = name;
                     this.user.pic = this.elements.profilePicUrlInput?.value.trim() || '';
                     localStorage.setItem('userName', this.user.name);
                     localStorage.setItem('profilePic', this.user.pic);
 
-                    this.elements.profileScreen.style.display = 'none';
+                    this.hideProfilePopup();
                     this.updateProfileUI();
                     
                     if (this.messagesQuery) {
-                        // If app is already started, update presence. Otherwise, start it.
                         this.isAppStarted ? this.updateMyPresence() : this.startApp();
                     }
                 },
@@ -435,10 +461,8 @@
                 },
 
                 startApp() {
-                    if (!this.db || !this.messagesQuery || this.isAppStarted) {
-                        return;
-                    }
-                    this.isAppStarted = true; // Prevent starting multiple times
+                    if (this.isAppStarted) return;
+                    this.isAppStarted = true;
                     this.listenForMessages();
                     this.setupPresence();
                     this.listenForTyping();
@@ -449,17 +473,13 @@
                     if (!text) return;
                     
                     const messageData = {
-                        sender: { name: this.user.name, pic: this.user.pic },
-                        sessionId: this.user.sessionId,
-                        text: text,
-                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                        sender: { name: this.user.name, pic: this.user.pic }, sessionId: this.user.sessionId,
+                        text: text, timestamp: firebase.database.ServerValue.TIMESTAMP
                     };
                     
                     this.messagesQuery.ref.push(messageData).catch(err => console.error("Message send failed:", err));
                     
-                    if (!textToSend) {
-                        this.elements.messageInput.value = '';
-                    }
+                    if (!textToSend) { this.elements.messageInput.value = ''; }
                     this.toggleSendButton();
                     this.setTypingStatus(false);
                 },
@@ -472,19 +492,16 @@
                     const filePath = `chat_images/${Date.now()}_${file.name}`;
                     const uploadTask = this.storage.ref(filePath).put(file);
 
-                    uploadTask.on('state_changed', null, 
-                        (error) => {
-                            console.error('Upload failed:', error);
-                            alert('Sorry, the image could not be uploaded.');
+                    uploadTask.on('state_changed', null, (error) => {
+                        console.error('Upload failed:', error);
+                        alert('Sorry, the image could not be uploaded.');
+                        this.elements.typingIndicator.textContent = '';
+                    }, () => {
+                        uploadTask.snapshot.ref.getDownloadURL().then(url => {
+                            this.sendMessage(url);
                             this.elements.typingIndicator.textContent = '';
-                        }, 
-                        () => {
-                            uploadTask.snapshot.ref.getDownloadURL().then(url => {
-                                this.sendMessage(url);
-                                this.elements.typingIndicator.textContent = '';
-                            });
-                        }
-                    );
+                        });
+                    });
                     event.target.value = '';
                 },
 
@@ -500,44 +517,31 @@
                     const time = new Date(msg.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
                     
                     const senderPicHtml = !isSent ? `<div class="sender-profile-pic" style="background-image: url('${msg.sender.pic || ''}')">${!msg.sender.pic ? (msg.sender.name?.charAt(0) || '?').toUpperCase() : ''}</div>` : '';
-                    const senderNameHtml = !isSent ? `<div class="sender-name">${msg.sender.name || 'Anonymous'}</div>` : '';
+                    const senderNameHtml = !isSent ? `<div class="sender-name">${this.escapeHTML(msg.sender.name || 'Anonymous')}</div>` : '';
                     const statusIcon = isSent ? (this.onlineUsers.size > 1 ? this.icons.delivered : this.icons.sent) : '';
 
+                    let messageContentHtml;
                     const imageRegex = /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))/i;
-                    let messageContentHtml = this.escapeHTML(msg.text || '');
                     if (imageRegex.test(msg.text)) {
-                        messageContentHtml = `<img src="${msg.text}" alt="User content" onclick="window.open('${msg.text}', '_blank')">`;
+                        messageContentHtml = `<img src="${this.escapeHTML(msg.text)}" alt="User content" onclick="window.open('${this.escapeHTML(msg.text)}', '_blank')">`;
                     } else {
                         const urlPattern = /(\b(https?|ftp|file):\/\/[-A-Z0-9+&@#\/%?=~_|!:,.;]*[-A-Z0-9+&@#\/%=~_|])/ig;
-                        messageContentHtml = messageContentHtml.replace(urlPattern, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
+                        messageContentHtml = this.escapeHTML(msg.text || '').replace(urlPattern, url => `<a href="${url}" target="_blank" rel="noopener noreferrer">${url}</a>`);
                     }
 
                     const wrapper = document.createElement('div');
                     wrapper.id = `msg-${key}`;
                     wrapper.className = `message-wrapper ${isSent ? 'sent' : 'received'}`;
-                    wrapper.innerHTML = `
-                        <div class="message-container ${isSent ? 'sent' : 'received'}">
-                            ${senderPicHtml}
-                            <div class="message-content">
-                                ${senderNameHtml}
-                                ${messageContentHtml}
-                                <div class="message-info">${time} ${statusIcon}</div>
-                            </div>
-                        </div>`;
+                    wrapper.innerHTML = `<div class="message-container ${isSent ? 'sent' : 'received'}">${senderPicHtml}<div class="message-content">${senderNameHtml}${messageContentHtml}<div class="message-info">${time} ${statusIcon}</div></div></div>`;
                     
                     const existing = document.getElementById(`msg-${key}`);
-                    if (existing) {
-                        existing.replaceWith(wrapper);
-                    } else {
-                        this.elements.chatMessages.appendChild(wrapper);
-                    }
+                    if (existing) { existing.replaceWith(wrapper); } else { this.elements.chatMessages.appendChild(wrapper); }
                     this.scrollToBottom();
                 },
                 
                 escapeHTML(str) {
-                    return str.replace(/[&<>"']/g, function(m) {
-                        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
-                    });
+                    const map = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+                    return str.replace(/[&<>"']/g, m => map[m]);
                 },
 
                 setupPresence() {
@@ -556,9 +560,8 @@
                     });
                 },
                 
-                // NEW: Centralized function to set/update user's presence data.
                 updateMyPresence() {
-                    if(this.presenceRef && this.user.sessionId && this.user.name) {
+                    if (this.presenceRef && this.user.sessionId && this.user.name) {
                        this.presenceRef.child(this.user.sessionId).set({ name: this.user.name, last_seen: firebase.database.ServerValue.TIMESTAMP });
                     }
                 },
@@ -580,30 +583,22 @@
                     if (isTyping) {
                         myTypingRef.set({ name: this.user.name });
                         myTypingRef.onDisconnect().remove();
-                    } else {
-                        myTypingRef.remove();
-                    }
+                    } else { myTypingRef.remove(); }
                     this.isTyping = isTyping;
                 },
 
                 listenForTyping() {
                     this.typingRef.on('value', snap => {
                         const typingUsers = [];
-                        snap.forEach(child => {
-                            if (child.key !== this.user.sessionId) typingUsers.push(child.val().name);
-                        });
+                        snap.forEach(child => { if (child.key !== this.user.sessionId) typingUsers.push(child.val().name); });
                         this.updateTypingIndicator(typingUsers);
                     });
                 },
                 
                 updateTypingIndicator(users) {
-                    if (users.length === 0) {
-                        this.elements.typingIndicator.textContent = '';
-                    } else if (users.length === 1) {
-                        this.elements.typingIndicator.textContent = `${users[0]} is typing...`;
-                    } else {
-                        this.elements.typingIndicator.textContent = `${users.length} people are typing...`;
-                    }
+                    if (users.length === 0) { this.elements.typingIndicator.textContent = ''; } 
+                    else if (users.length === 1) { this.elements.typingIndicator.textContent = `${this.escapeHTML(users[0])} is typing...`; } 
+                    else { this.elements.typingIndicator.textContent = `${users.length} people are typing...`; }
                 },
 
                 toggleSendButton() {
@@ -615,8 +610,7 @@
                 },
 
                 initTheme() {
-                    const savedTheme = localStorage.getItem('theme') || 'light';
-                    this.setTheme(savedTheme);
+                    this.setTheme(localStorage.getItem('theme') || 'light');
                 },
 
                 setTheme(theme) {
@@ -627,8 +621,7 @@
                 },
 
                 toggleTheme() {
-                    const newTheme = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-                    this.setTheme(newTheme);
+                    this.setTheme(document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light');
                 },
             };
 
