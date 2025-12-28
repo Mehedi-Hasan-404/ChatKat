@@ -3,7 +3,28 @@
 @tailwind utilities;
 
 @layer base {
+  html, body {
+    @apply h-full;
+  }
+  
   body {
     @apply bg-bg-light text-text-dark dark:bg-dark-bg-light dark:text-dark-text-dark;
+    margin: 0;
+    padding: 0;
+  }
+
+  * {
+    @apply border-border-color dark:border-dark-border-color;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
   }
 }
