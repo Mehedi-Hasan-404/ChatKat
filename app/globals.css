@@ -3,18 +3,27 @@
 @tailwind utilities;
 
 @layer base {
-  html, body {
-    @apply h-full;
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html {
+    height: 100%;
+    overflow: hidden;
   }
   
   body {
     @apply bg-bg-light text-text-dark dark:bg-dark-bg-light dark:text-dark-text-dark;
-    margin: 0;
-    padding: 0;
+    height: 100%;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
 
-  * {
-    @apply border-border-color dark:border-dark-border-color;
+  #__next {
+    height: 100%;
   }
 }
 
@@ -26,5 +35,21 @@
   
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-text-secondary dark:bg-dark-text-secondary rounded-full;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-dark dark:bg-dark-text-dark;
   }
 }
