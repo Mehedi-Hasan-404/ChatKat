@@ -16,6 +16,8 @@ interface ChatContextType {
   sendMessage: (text: string) => void;
   uploadAndSendMessage: (file: File) => void;
   setTyping: (isTyping: boolean) => void;
+  deleteMessage?: (messageId: string) => void;
+  addReaction?: (messageId: string, emoji: string) => void;
 }
 
 export const ChatContext = createContext<ChatContextType | null>(null);
@@ -30,12 +32,10 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isClient, setIsClient] = useState(false);
   
-  // Check if we're on the client side
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Load user profile from localStorage on initial load
   useEffect(() => {
     if (!isClient) return;
 
@@ -59,7 +59,6 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [isClient]);
 
-  // Initialize database connection and listeners when user is set
   useEffect(() => {
     if (!user || !isClient) return;
 
@@ -136,6 +135,28 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user, isTyping, typingTimeout]);
 
+  const deleteMessage = useCallback((messageId: string) => {
+    if (!user) return;
+    // For now, just remove from local state
+    // In production, you'd call dbService.deleteMessage(messageId)
+    setMessages(prev => prev.filter(msg => msg.id !== messageId));
+    // dbService.deleteMessage?.(messageId);
+  }, [user]);
+
+  const addReaction = useCallback((messageId: string, emoji: string) => {
+    if (!user) return;
+    // For now, just update local state
+    // In production, you'd call dbService.addReaction(messageId, emoji)
+    setMessages(prev => prev.map(msg => {
+      if (msg.id === messageId) {
+        const reactions = msg.reactions || [];
+        return { ...msg, reactions: [...reactions, emoji] };
+      }
+      return msg;
+    }));
+    // dbService.addReaction?.(messageId, emoji);
+  }, [user]);
+
   const contextValue = useMemo(() => ({
     user,
     messages,
@@ -146,7 +167,9 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     sendMessage,
     uploadAndSendMessage,
     setTyping,
-  }), [user, messages, onlineUsers, typingUsers, status, saveUserProfile, sendMessage, uploadAndSendMessage, setTyping]);
+    deleteMessage,
+    addReaction,
+  }), [user, messages, onlineUsers, typingUsers, status, saveUserProfile, sendMessage, uploadAndSendMessage, setTyping, deleteMessage, addReaction]);
 
   return (
     <ChatContext.Provider value={contextValue}>
