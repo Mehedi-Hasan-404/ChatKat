@@ -10,39 +10,39 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Light Theme Colors
-        primary: '#007AFF',
-        'primary-hover': '#0056b3',
-        'sent-bg': '#007AFF',
-        'received-bg': '#F2F2F7',
+        // Light Theme Colors - Better contrast
+        primary: '#0A84FF',
+        'primary-hover': '#0066CC',
+        'sent-bg': '#0A84FF',
+        'received-bg': '#E9ECEF',
         'bg-main': '#FFFFFF',
-        'bg-light': '#F5F5F7',
-        'text-dark': '#1c1c1e',
-        'text-light': '#ffffff',
-        'text-secondary': '#8A8A8E',
-        'border-color': '#E5E5E5',
+        'bg-light': '#F8F9FA',
+        'text-dark': '#212529',
+        'text-light': '#FFFFFF',
+        'text-secondary': '#6C757D',
+        'border-color': '#DEE2E6',
 
-        // Dark Theme Colors (with dark- prefix)
-        'dark-primary': '#0b84ff',
-        'dark-primary-hover': '#2563eb',
-        'dark-sent-bg': '#0b84ff',
-        'dark-received-bg': '#2c2c2e',
-        'dark-bg-main': '#121212',
-        'dark-bg-light': '#1c1c1e',
-        'dark-text-dark': '#e1e1e1',
-        'dark-text-light': '#ffffff',
-        'dark-text-secondary': '#8d8d92',
-        'dark-border-color': '#3a3a3c',
+        // Dark Theme Colors - Much better visibility
+        'dark-primary': '#0A84FF',
+        'dark-primary-hover': '#409CFF',
+        'dark-sent-bg': '#0A84FF',
+        'dark-received-bg': '#2C2C2E',
+        'dark-bg-main': '#000000',
+        'dark-bg-light': '#1C1C1E',
+        'dark-text-dark': '#FFFFFF',
+        'dark-text-light': '#FFFFFF',
+        'dark-text-secondary': '#98989D',
+        'dark-border-color': '#38383A',
       },
       borderRadius: {
         small: '8px',
         medium: '12px',
-        large: '20px',
+        large: '18px',
       },
       boxShadow: {
-        light: '0 2px 12px rgba(0, 0, 0, 0.08)',
-        medium: '0 4px 20px rgba(0, 0, 0, 0.12)',
-        heavy: '0 10px 40px rgba(0, 0, 0, 0.15)',
+        light: '0 2px 8px rgba(0, 0, 0, 0.1)',
+        medium: '0 4px 16px rgba(0, 0, 0, 0.15)',
+        heavy: '0 8px 32px rgba(0, 0, 0, 0.2)',
       },
       keyframes: {
         fadeInUp: {
