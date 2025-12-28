@@ -40,7 +40,7 @@ const ProfileCreationDialog = () => {
                             onChange={(e) => setName(e.target.value)}
                             placeholder="e.g., Alex Doe"
                             required
-                            className="w-full p-3 border border-border-color dark:border-dark-border-color rounded-medium bg-bg-light dark:bg-dark-bg-light text-text-dark dark:text-dark-text-dark focus:ring-2 focus:ring-primary dark:focus:ring-dark-primary outline-none"
+                            className="w-full p-3 border border-border-color dark:border-dark-border-color rounded-medium bg-bg-light dark:bg-dark-bg-light text-text-dark dark:text-dark-text-dark placeholder:text-text-secondary dark:placeholder:text-dark-text-secondary focus:ring-2 focus:ring-primary dark:focus:ring-dark-primary outline-none"
                         />
                     </div>
                     <div>
@@ -51,7 +51,7 @@ const ProfileCreationDialog = () => {
                             value={picUrl}
                             onChange={(e) => setPicUrl(e.target.value)}
                             placeholder="Paste image URL here"
-                            className="w-full p-3 border border-border-color dark:border-dark-border-color rounded-medium bg-bg-light dark:bg-dark-bg-light text-text-dark dark:text-dark-text-dark focus:ring-2 focus:ring-primary dark:focus:ring-dark-primary outline-none"
+                            className="w-full p-3 border border-border-color dark:border-dark-border-color rounded-medium bg-bg-light dark:bg-dark-bg-light text-text-dark dark:text-dark-text-dark placeholder:text-text-secondary dark:placeholder:text-dark-text-secondary focus:ring-2 focus:ring-primary dark:focus:ring-dark-primary outline-none"
                         />
                     </div>
                     <button type="submit" className="w-full py-3 text-white font-semibold rounded-medium bg-primary hover:bg-primary-hover dark:bg-dark-primary dark:hover:bg-dark-primary-hover transition-all shadow-light hover:shadow-medium hover:-translate-y-0.5">
@@ -66,23 +66,22 @@ const ProfileCreationDialog = () => {
 export default function ChatPage() {
     const { user } = useChat();
 
-    // The profile dialog is shown if the user object doesn't exist
     if (!user) {
         return (
-            <main className="flex justify-center items-center min-h-screen p-4 bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-800 dark:to-gray-900">
+            <div className="fixed inset-0 flex justify-center items-center bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-800 dark:to-gray-900">
                 <ProfileCreationDialog />
-            </main>
+            </div>
         );
     }
 
     return (
-        <main className="flex justify-center items-center min-h-screen p-0 sm:p-4 bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-800 dark:to-gray-900">
-            <div className="flex flex-col w-full h-screen sm:h-[95vh] max-w-md bg-bg-main dark:bg-dark-bg-main shadow-heavy sm:max-h-[900px] sm:rounded-3xl overflow-hidden">
+        <div className="fixed inset-0 flex justify-center items-center bg-gradient-to-br from-gray-100 to-gray-300 dark:from-gray-800 dark:to-gray-900 p-0 sm:p-4">
+            <div className="flex flex-col w-full h-full sm:h-[96vh] sm:max-h-[900px] max-w-md bg-bg-main dark:bg-dark-bg-main shadow-heavy sm:rounded-3xl overflow-hidden">
                 <ChatHeader />
                 <ChatMessages />
                 <TypingIndicator />
                 <ChatInput />
             </div>
-        </main>
+        </div>
     );
 }
