@@ -1,3 +1,42 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#FCD34D" stroke="#F59E0B" stroke-width="1.5">
-  <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386l-1.591 1.591M21 12h-2.25m-.386 6.364l-1.591-1.591M12 18.75V21m-4.773-4.227l-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0z" />
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
+  <defs>
+    <linearGradient id="sunGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#FCD34D;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Sun center circle with pulse animation -->
+  <circle cx="12" cy="12" r="4" fill="url(#sunGradient)">
+    <animate attributeName="r" values="4;4.5;4" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="1;0.8;1" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Rotating sun rays -->
+  <g stroke="url(#sunGradient)" stroke-width="2" stroke-linecap="round">
+    <line x1="12" y1="1" x2="12" y2="3">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    </line>
+    <line x1="12" y1="21" x2="12" y2="23">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    </line>
+    <line x1="1" y1="12" x2="3" y2="12">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    </line>
+    <line x1="21" y1="12" x2="23" y2="12">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    </line>
+    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    </line>
+    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    </line>
+    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    </line>
+    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    </line>
+  </g>
 </svg>
