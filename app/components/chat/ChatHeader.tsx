@@ -31,7 +31,7 @@ const ProfileEditor = ({ onClose }: { onClose: () => void }) => {
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g., Alex Doe"
                     required
-                    className="w-full p-3 border border-border-color dark:border-dark-border-color rounded-medium bg-bg-light dark:bg-dark-bg-light focus:ring-2 focus:ring-primary dark:focus:ring-dark-primary outline-none"
+                    className="w-full p-3 border border-border-color dark:border-dark-border-color rounded-medium bg-bg-light dark:bg-dark-bg-light text-text-dark dark:text-dark-text-dark placeholder:text-text-secondary dark:placeholder:text-dark-text-secondary focus:ring-2 focus:ring-primary dark:focus:ring-dark-primary outline-none"
                 />
             </div>
             <div>
@@ -42,7 +42,7 @@ const ProfileEditor = ({ onClose }: { onClose: () => void }) => {
                     value={picUrl}
                     onChange={(e) => setPicUrl(e.target.value)}
                     placeholder="Paste image URL here"
-                    className="w-full p-3 border border-border-color dark:border-dark-border-color rounded-medium bg-bg-light dark:bg-dark-bg-light focus:ring-2 focus:ring-primary dark:focus:ring-dark-primary outline-none"
+                    className="w-full p-3 border border-border-color dark:border-dark-border-color rounded-medium bg-bg-light dark:bg-dark-bg-light text-text-dark dark:text-dark-text-dark placeholder:text-text-secondary dark:placeholder:text-dark-text-secondary focus:ring-2 focus:ring-primary dark:focus:ring-dark-primary outline-none"
                 />
             </div>
             <button type="submit" className="w-full py-3 text-white font-semibold rounded-medium bg-primary hover:bg-primary-hover dark:bg-dark-primary dark:hover:bg-dark-primary-hover transition-all shadow-light hover:shadow-medium hover:-translate-y-0.5">
@@ -66,8 +66,13 @@ export const ChatHeader = () => {
     }
 
     const ProfileAvatar = () => (
-        <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg text-text-dark dark:text-dark-text-dark bg-amber-400 shadow-light border-2 border-white cursor-pointer transition-transform hover:scale-105"
-             style={{ backgroundImage: `url(${user?.pic})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
+        <div 
+            className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-lg text-white bg-gradient-to-br from-amber-400 to-orange-500 dark:from-amber-500 dark:to-orange-600 shadow-md border-2 border-white dark:border-dark-bg-main cursor-pointer transition-all hover:scale-110 hover:shadow-lg"
+            style={user?.pic ? { 
+                backgroundImage: `url(${user.pic})`, 
+                backgroundSize: 'cover', 
+                backgroundPosition: 'center' 
+            } : {}}
         >
             {!user?.pic && (user?.name?.charAt(0) || 'U').toUpperCase()}
         </div>
@@ -88,7 +93,7 @@ export const ChatHeader = () => {
             </Dialog>
 
             <div className="flex-grow mx-3 overflow-hidden">
-                <h2 className="text-lg font-semibold truncate text-text-dark dark:text-dark-text-dark">ChatKat by Mehedi</h2>
+                <h2 className="text-lg font-bold truncate text-text-dark dark:text-dark-text-dark">ChatKat by Mehedi</h2>
                 <p className="text-sm font-medium text-text-secondary dark:text-dark-text-secondary">{onlineStatusText}</p>
             </div>
             <ThemeToggle />
