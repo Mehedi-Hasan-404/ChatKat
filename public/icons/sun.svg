@@ -1,42 +1,90 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none">
   <defs>
-    <linearGradient id="sunGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#FCD34D;stop-opacity:1" />
+    <radialGradient id="sunCore" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FEF08A;stop-opacity:1" />
+      <stop offset="50%" style="stop-color:#FCD34D;stop-opacity:1" />
       <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:1" />
-    </linearGradient>
+    </radialGradient>
+    
+    <radialGradient id="sunGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#FEF08A;stop-opacity:0.8" />
+      <stop offset="100%" style="stop-color:#F59E0B;stop-opacity:0" />
+    </radialGradient>
+    
+    <filter id="sunBlur">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="0.5"/>
+    </filter>
   </defs>
   
-  <!-- Sun center circle with pulse animation -->
-  <circle cx="12" cy="12" r="4" fill="url(#sunGradient)">
-    <animate attributeName="r" values="4;4.5;4" dur="2s" repeatCount="indefinite"/>
-    <animate attributeName="opacity" values="1;0.8;1" dur="2s" repeatCount="indefinite"/>
+  <!-- Outer glow ring -->
+  <circle cx="12" cy="12" r="8" fill="url(#sunGlow)" opacity="0.6">
+    <animate attributeName="r" values="8;9;8" dur="2s" repeatCount="indefinite"/>
+    <animate attributeName="opacity" values="0.6;0.3;0.6" dur="2s" repeatCount="indefinite"/>
   </circle>
   
-  <!-- Rotating sun rays -->
-  <g stroke="url(#sunGradient)" stroke-width="2" stroke-linecap="round">
-    <line x1="12" y1="1" x2="12" y2="3">
-      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+  <!-- Main sun body with shimmer -->
+  <circle cx="12" cy="12" r="4.5" fill="url(#sunCore)">
+    <animate attributeName="r" values="4.5;5;4.5" dur="3s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Inner bright spot -->
+  <circle cx="12" cy="12" r="2.5" fill="#FEF9C3" opacity="0.7">
+    <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  
+  <!-- Rotating sun rays group 1 (long rays) -->
+  <g stroke="#F59E0B" stroke-width="2.5" stroke-linecap="round" opacity="0.9">
+    <line x1="12" y1="1" x2="12" y2="4">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="2s" repeatCount="indefinite"/>
     </line>
-    <line x1="12" y1="21" x2="12" y2="23">
-      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    <line x1="20.5" y1="12" x2="23.5" y2="12">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="2s" repeatCount="indefinite"/>
     </line>
-    <line x1="1" y1="12" x2="3" y2="12">
-      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    <line x1="12" y1="20" x2="12" y2="23">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="2s" repeatCount="indefinite"/>
     </line>
-    <line x1="21" y1="12" x2="23" y2="12">
-      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    <line x1="0.5" y1="12" x2="3.5" y2="12">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="opacity" values="0.9;1;0.9" dur="2s" repeatCount="indefinite"/>
     </line>
-    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64">
-      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+  </g>
+  
+  <!-- Rotating sun rays group 2 (diagonal rays) -->
+  <g stroke="#FCD34D" stroke-width="2" stroke-linecap="round" opacity="0.85">
+    <line x1="4.5" y1="4.5" x2="6.5" y2="6.5">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-width" values="2;2.5;2" dur="1.5s" repeatCount="indefinite"/>
     </line>
-    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78">
-      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    <line x1="17.5" y1="6.5" x2="19.5" y2="4.5">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-width" values="2;2.5;2" dur="1.5s" repeatCount="indefinite"/>
     </line>
-    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36">
-      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    <line x1="17.5" y1="17.5" x2="19.5" y2="19.5">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-width" values="2;2.5;2" dur="1.5s" repeatCount="indefinite"/>
     </line>
-    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22">
-      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="8s" repeatCount="indefinite"/>
+    <line x1="4.5" y1="19.5" x2="6.5" y2="17.5">
+      <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="6s" repeatCount="indefinite"/>
+      <animate attributeName="stroke-width" values="2;2.5;2" dur="1.5s" repeatCount="indefinite"/>
+    </line>
+  </g>
+  
+  <!-- Counter-rotating short rays -->
+  <g stroke="#FEF08A" stroke-width="2.5" stroke-linecap="round" opacity="0.7">
+    <line x1="12" y1="2.5" x2="12" y2="3.5">
+      <animateTransform attributeName="transform" type="rotate" from="360 12 12" to="0 12 12" dur="8s" repeatCount="indefinite"/>
+    </line>
+    <line x1="19" y1="12" x2="20" y2="12">
+      <animateTransform attributeName="transform" type="rotate" from="360 12 12" to="0 12 12" dur="8s" repeatCount="indefinite"/>
+    </line>
+    <line x1="12" y1="20.5" x2="12" y2="21.5">
+      <animateTransform attributeName="transform" type="rotate" from="360 12 12" to="0 12 12" dur="8s" repeatCount="indefinite"/>
+    </line>
+    <line x1="4" y1="12" x2="5" y2="12">
+      <animateTransform attributeName="transform" type="rotate" from="360 12 12" to="0 12 12" dur="8s" repeatCount="indefinite"/>
     </line>
   </g>
 </svg>
